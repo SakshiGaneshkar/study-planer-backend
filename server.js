@@ -7,11 +7,13 @@ dotenv.config();
 
 const app = express();
 
-// Middleware
+// ✅ FIXED CORS (allow deployed frontend)
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://127.0.0.1:3000'],
-  credentials: true
+  origin: "*",
+  methods: ["GET","POST","PUT","DELETE","PATCH","OPTIONS"],
+  allowedHeaders: ["Content-Type","Authorization"]
 }));
+
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
@@ -48,8 +50,6 @@ mongoose.connect(MONGODB_URI)
   })
   .catch(err => {
     console.error('❌ MongoDB Connection Error:', err.message);
-    console.log('💡 Make sure MongoDB is running or update MONGODB_URI in .env');
-    // Start server anyway for demo purposes
     app.listen(PORT, () => {
       console.log(`🚀 Server running on http://localhost:${PORT} (without DB)`);
     });
