@@ -5,9 +5,11 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 
+mongoose.set('bufferCommands', false);
+
 const app = express();
 
-// ✅ FIXED CORS (allow deployed frontend)
+// CORS
 app.use(cors({
   origin: "*",
   methods: ["GET","POST","PUT","DELETE","PATCH","OPTIONS"],
@@ -37,22 +39,26 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: 'Something went wrong!', error: err.message });
 });
 
-// Connect to MongoDB and start server
-const PORT = process.env.PORT || 5000;
+// MongoDB Connection
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/smart-study-planner';
 
-mongoose.connect(MONGODB_URI)
-  .then(() => {
-    console.log('✅ MongoDB Connected Successfully');
-    app.listen(PORT, () => {
-      console.log(`🚀 Server running on http://localhost:${PORT}`);
+let isConnected = false;
+
+const connectDB = async () => {
+  if (isConnected) return;
+  try {
+    await mongoose.connect(MONGODB_URI, {
+      serverSelectionTimeoutMS: 10000,
+      socketTimeoutMS: 30000,
     });
-  })
-  .catch(err => {
-    console.error('❌ MongoDB Connection Error:', err.message);
-    app.listen(PORT, () => {
-      console.log(`🚀 Server running on http://localhost:${PORT} (without DB)`);
-    });
-  });
+    isConnected = true;
+    console.log('✅ MongoDB Connected');
+  } catch (err) {
+    console.error('❌ MongoDB Error:', err.message);
+    isConnected = false;
+  }
+};
+
+connectDB();
 
 module.exports = app;
